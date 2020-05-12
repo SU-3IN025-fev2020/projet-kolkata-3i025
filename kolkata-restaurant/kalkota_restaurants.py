@@ -9,6 +9,7 @@ from players import Player
 from sprite import MovingSprite
 from ontology import Ontology
 from itertools import chain
+from astar import astar
 import pygame
 import glo
 
@@ -17,8 +18,6 @@ import numpy as np
 import sys
 
 
-
-    
 # ---- ---- ---- ---- ---- ----
 # ---- Main                ----
 # ---- ---- ---- ---- ---- ----
@@ -111,6 +110,15 @@ def main():
         restau[j]=c
     
     #-------------------------------
+    # l'application de A*
+    #-------------------------------
+
+    paths = [[]]*nbPlayers
+    arriverd = [False]*nbPlayers
+    for j in range(nbPlayers):
+        paths[j] = astar(20, posPlayers[j], goalStates[restau[j]], wallStates)
+
+    #-------------------------------
     # Boucle principale de déplacements 
     #-------------------------------
     
@@ -119,12 +127,26 @@ def main():
     
     for i in range(iterations):
         
+        print('iteration -- ', i)
+
         for j in range(nbPlayers): # on fait bouger chaque joueur séquentiellement
             row,col = posPlayers[j]
+            
+            # si on est à l'emplacement d'un restaurant, on s'arrête
+            if (row,col) == goalStates[restau[j]]:
+                #o = players[j].ramasse(game.layers)
+                game.mainiteration()
+                print ("Le joueur ", j, " est à son restaurant.")
+                #goalStates.remove((row,col)) # on enlève ce goalState de la liste
+                arriverd[j] = True
+                
+                continue
+            
+            next_row,next_col = paths[j][i]
 
-            x_inc,y_inc = random.choice([(0,1),(0,-1),(1,0),(-1,0)])
-            next_row = row+x_inc
-            next_col = col+y_inc
+            #x_inc,y_inc = random.choice([(0,1),(0,-1),(1,0),(-1,0)])
+            #next_row = row+x_inc
+            #next_col = col+y_inc
             # and ((next_row,next_col) not in posPlayers)
             if ((next_row,next_col) not in wallStates) and next_row>=0 and next_row<=19 and next_col>=0 and next_col<=19:
                 players[j].set_rowcol(next_row,next_col)
@@ -138,15 +160,6 @@ def main():
       
         
             
-            # si on est à l'emplacement d'un restaurant, on s'arrête
-            if (row,col) == restau[j]:
-                #o = players[j].ramasse(game.layers)
-                game.mainiteration()
-                print ("Le joueur ", j, " est à son restaurant.")
-               # goalStates.remove((row,col)) # on enlève ce goalState de la liste
-                
-                
-                break
             
     
     pygame.quit()
